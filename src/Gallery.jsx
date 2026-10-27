@@ -1,14 +1,22 @@
-import { useReducer, useEffect } from 'react'
+import { useState, useReducer, useEffect, useCallback, useMemo } from 'react'
 import { useFetchPhotos } from './useFetchPhotos'
 import { favouritesReducer, loadFavourites } from './favouritesReducer'
 
 function Gallery() {
   const { photos, loading, error } = useFetchPhotos()
   const [favs, dispatch] = useReducer(favouritesReducer, [], loadFavourites)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     localStorage.setItem('favourites', JSON.stringify(favs))
   }, [favs])
+
+  const handleSearch = useCallback((e) => setSearch(e.target.value), [])
+
+  const filtered = useMemo(
+    () => photos.filter((p) => p.author.toLowerCase().includes(search.toLowerCase())),
+    [photos, search]
+  )
 
   if (loading) {
     return (
@@ -31,8 +39,16 @@ function Gallery() {
   return (
     <div className="min-h-screen bg-stone-100 text-stone-800 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
+        <input
+          type="text"
+          value={search}
+          onChange={handleSearch}
+          placeholder="Search by author"
+          className="block w-full max-w-sm bg-white border border-stone-300 rounded px-3 py-2 focus:outline-none focus:border-orange-600 mb-6"
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {photos.map((photo) => {
+          {filtered.map((photo) => {
             const isFav = favs.includes(photo.id)
 
             return (
